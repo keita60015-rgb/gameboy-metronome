@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>METRONOME PRO - Game Boy Style</title>
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiTWV0cm9ub21lIFBybyIsInNob3J0X25hbWUiOiJNZXRyb25vbWUiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2U4ZTllYSIsInRoZW1lX2NvbG9yIjoiIzJhMmEyYSIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUIzYVdSMGFEMGlOakFpSUdobGFXZG9kRDBpTmpBaUlIWnBaWGRDYjNnOUlqQWdNQ0EyTUNBMk1DSWdabWxzYkQwaWJtOXVaU0krUEhKbFkzUWdlRDBpTVRBaUlIazlJakV3SWlCM2FXUjBhRDBpTkRBaUlHaGxhV2RvZEQwaU5EQWlJSEo0UFNJMUlpQm1hV3hzUFNJak1tRXlZVEpoSWk4K1BISmxZM1FnZUQwaU1UVWlJSGs5SWpFMUlpQjNhV1IwYUQwaU16QWlJR2hsYVdkb2REMGlNekFpSUhKNFBTSXlJaUJtYVd4c1BTSWpObUZqUW1GaklpOCtQQzl6ZG1jKyIsInNpemVzIjoiNjR4NjQiLCJ0eXBlIjoiaW1hZ2Uvc3ZnK3htbCJ9XX0=">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+        :root {
+            --gb-light-green: #e8e9ea;
+            --gb-mid-green: #b8bab8;
+            --gb-dark-green: #6a6b6a;
+            --gb-darkest: #2a2a2a;
+            --gb-screen: #c5c7c5;
+            --gb-screen-dark: #a8aaa8;
+            --accent-color: #4a9eff;
+            --error-color: #ff4a4a;
+            --success-color: #4aff4a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--gb-light-green), #d3d4d5);
+            color: var(--gb-darkest);
+            font-family: 'Orbitron', monospace;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .theme-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .theme-button {
+            background: var(--gb-screen-dark);
+            border: 2px solid var(--gb-darkest);
+            color: var(--gb-darkest);
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 12px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 2px;
+        }
+
+        .theme-button:hover {
+            background: var(--gb-dark-green);
+            color: var(--gb-light-green);
+        }
+
+        .fullscreen-toggle {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: var(--gb-screen-dark);
+            border: 2px solid var(--gb-darkest);
+            color: var(--gb-darkest);
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 12px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .gameboy-screen {
+            background: var(--gb-mid-green);
+            border: 8px solid var(--gb-dark-green);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 
+                inset -4px -4px 8px rgba(0,0,0,0.3),
+                inset 4px 4px 8px rgba(255,255,255,0.1),
+                0 8px 32px rgba(0,0,0,0.4);
+            width: 520px;
+            height: 720px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .screen-inner {
+            background: var(--gb-screen);
+            border: 4px solid var(--gb-darkest);
+            border-radius: 8px;
+            height: 100%;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: inset 2px 2px 6px rgba(0,0,0,0.3);
+            overflow-y: auto;
+        }
+        
+        .title {
+            font-size: 20px;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 0px rgba(255,255,255,0.3);
+            letter-spacing: 3px;
+            color: var(--gb-darkest);
+        }
+        
+        .bpm-display {
+            background: var(--gb-screen-dark);
+            border: 4px solid var(--gb-darkest);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+            box-shadow: inset 2px 2px 6px rgba(0,0,0,0.3);
+            width: 100%;
+        }
+        
+        .bpm-number {
+            font-size: 36px;
+            font-weight: 900;
+            color: var(--gb-darkest);
+            margin-bottom: 5px;
+            font-family: 'Orbitron', monospace;
+        }
+        
+        .bpm-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--gb-darkest);
+            letter-spacing: 2px;
+        }
+
+        .subdivision-display {
+            font-size: 10px;
+            color: var(--gb-darkest);
+            margin-top: 5px;
+        }
+        
+        .metronome-zone {
+            width: 100%;
+            height: 160px;
+            background: #b0b2b0;
+            border: 4px solid var(--gb-darkest);
+            border-radius: 10px;
+            position: relative;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 2px 2px 6px rgba(0,0,0,0.3);
+        }
+        
+        .metronome-pendulum {
+            width: 6px;
+            height: 120px;
+            background: var(--gb-darkest);
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform-origin: bottom center;
+            transform: translateX(-50%);
+            transition: transform 0.05s ease;
+            border-radius: 3px;
+        }
+        
+        .metronome-pendulum::before {
+            content: '';
+            position: absolute;
+            top: -12px;
+            left: -9px;
+            width: 24px;
+            height: 24px;
+            background: var(--gb-darkest);
+            border-radius: 50%;
+            border: 2px solid var(--gb-dark-green);
+        }
+        
+        .beat-indicator {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 16px;
+            font-weight: 900;
+            color: var(--gb-darkest);
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .beat-dot {
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--gb-darkest);
+            border-radius: 50%;
+            background: var(--gb-screen-dark);
+            transition: all 0.1s ease;
+            position: relative;
+        }
+        
+        .beat-dot.active {
+            background: var(--gb-darkest);
+            box-shadow: 0 0 8px rgba(42,42,42,0.5);
+        }
+
+        .beat-dot.accent {
+            border-color: var(--accent-color);
+            border-width: 3px;
+        }
+
+        .beat-dot.accent.active {
+            background: var(--accent-color);
+            box-shadow: 0 0 10px rgba(74, 158, 255, 0.7);
+        }
+
+        .subdivision-dots {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 4px;
+        }
+
+        .sub-dot {
+            width: 8px;
+            height: 8px;
+            border: 1px solid var(--gb-darkest);
+            border-radius: 50%;
+            background: var(--gb-screen-dark);
+            transition: all 0.1s ease;
+        }
+
+        .sub-dot.active {
+            background: var(--gb-darkest);
+        }
+        
+        .controls-section {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .bpm-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .bpm-button {
+            background: var(--gb-screen-dark);
+            border: 3px solid var(--gb-darkest);
+            color: var(--gb-darkest);
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            font-size: 16px;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 3px 3px 0px var(--gb-dark-green);
+            transition: all 0.1s ease;
+        }
+        
+        .bpm-button:hover {
+            background: #9a9c9a;
+        }
+        
+        .bpm-button:active {
+            transform: translate(3px, 3px);
+            box-shadow: none;
+        }
+        
+        .bpm-input {
+            background: var(--gb-screen-dark);
+            border: 3px solid var(--gb-darkest);
+            color: var(--gb-darkest);
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            font-size: 16px;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+            width: 80px;
+            box-shadow: inset 2px 2px 6px rgba(0,0,0,0.3);
+        }
+        
+        .time-signature {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .time-signature-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--gb-darkest);
+            letter-spacing: 1px;
+        }
+        
+        .time-signature-select {
+            background: var(--gb-screen-dark);
+            border: 3px solid var(--gb-darkest);
+            color: var(--gb-darkest);
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 11px;
+            padding: 6px 10px;
+            border-radius: 5px;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .subdivision-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .subdivision-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--gb-darkest);
+            letter-spacing: 1px;
+        }
+
+        .subdivision-select {
+            background: var(--gb-screen-dark);
+            border: 3px solid var(--gb-darkest);
+            color: var(--gb-darkest);
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 11px;
+            padding: 6px 10px;
+            border-radius: 5px;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .sound-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .sound-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--gb-darkest);
+            letter-spacing: 1px;
+        }
+
+        .sound-select {
+            background: var(--gb-screen-dark);
+            border: 3px solid var(--gb-darkest);
+            color: var(--gb-darkest);
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 11px;
+            padding: 6px 10px;
+            border-radius: 5px;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .accent-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .accent-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--gb-darkest);
+            letter-spacing: 1px;
+        }
+
+        .accent-buttons {
+            display: flex;
+            gap: 4px;
+        }
+
+        .accent-button {
+            background: var(--gb-screen-dark);
+            border: 2px solid var(--gb-darkest);
+            color: var(--gb-darkest);
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 10px;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .accent-button.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+        
+        .tempo-presets {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 15px;
+        }
+        
+        .preset-button {
+            background: var(--gb-screen-dark);
+            border: 2px solid var(--gb-darkest);
+            color: var(--gb-darkest);
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 9px;
+            padding: 6px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            text-align: center;
+        }
+        
+        .preset-button:hover {
+            background: #9a9c9a;
+        }
+        
+        .preset-button:active {
+            background: var(--gb-darkest);
+            color: var(--gb-screen);
+        }
+        
+        .main-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .retro-button {
+            background: var(--gb-screen-dark);
+            border: 3px solid var(--gb-darkest);
+            color: var(--gb-darkest);
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            font-size: 12px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 3px 3px 0px var(--gb-dark-green);
+        }
+        
+        .retro-button:hover {
+            background: #9a9c9a;
+        }
+        
+        .retro-button:active {
+            transform: translate(3px, 3px);
+            box-shadow: none;
+        }
+        
+        .retro-button.active {
+            background: var(--gb-darkest);
+            color: var(--gb-screen);
+        }
+        
+        .tap-button {
+            width: 100px;
+            height: 50px;
+            font-size: 14px;
+            background: #9a9c9a;
+        }
+
+        .practice-controls {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .practice-button {
+            background: var(--gb-screen-dark);
+            border: 2px solid var(--gb-darkest);
+            color: var(--gb-darkest);
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 10px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            text-transform: uppercase;
+        }
+
+        .practice-button.active {
+            background: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
+        }
+        
+        .status-display {
+            width: 100%;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--gb-darkest);
+            background: var(--gb-screen-dark);
+            border: 2px solid var(--gb-darkest);
+            border-radius: 5px;
+            padding: 8px;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .keyboard-shortcuts {
+            font-size: 8px;
+            color: var(--gb-darkest);
+            text-align: center;
+            line-height: 1.2;
+        }
+        
+        @keyframes pendulum-swing {
+            0% { transform: translateX(-50%) rotate(-25deg); }
+            50% { transform: translateX(-50%) rotate(25deg); }
+            100% { transform: translateX(-50%) rotate(-25deg); }
+        }
+        
+        .pendulum-active {
+            animation: pendulum-swing linear infinite;
+        }
+        
+        @keyframes beat-flash {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+        
+        .flash {
+            animation: beat-flash 0.2s ease;
+        }
+
+        /* Theme variants */
+        .theme-dark {
+            --gb-light-green: #1a1a1a;
+            --gb-mid-green: #333333;
+            --gb-dark-green: #555555;
+            --gb-darkest: #ffffff;
+            --gb-screen: #222222;
+            --gb-screen-dark: #444444;
+        }
+
+        .theme-blue {
+            --gb-light-green: #e6f3ff;
+            --gb-mid-green: #b3d9ff;
+            --gb-dark-green: #4d94ff;
+            --gb-darkest: #0066cc;
+            --gb-screen: #cce6ff;
+            --gb-screen-dark: #99ccff;
+        }
+
+        .theme-retro {
+            --gb-light-green: #fff8dc;
+            --gb-mid-green: #daa520;
+            --gb-dark-green: #b8860b;
+            --gb-darkest: #8b4513;
+            --gb-screen: #f5deb3;
+            --gb-screen-dark: #daa520;
+        }
+
+        /* Fullscreen styles */
+        .fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10000;
+            background: var(--gb-light-green);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .fullscreen .gameboy-screen {
+            width: 90vw;
+            height: 90vh;
+            max-width: 600px;
+            max-height: 800px;
+        }
+
+        @media (max-width: 600px) {
+            .gameboy-screen {
+                width: 95vw;
+                height: 95vh;
+                padding: 15px;
+            }
+            
+            .screen-inner {
+                padding: 10px;
+            }
+            
+            .title {
+                font-size: 16px;
+                margin-bottom: 10px;
+            }
+            
+            .bpm-number {
+                font-size: 28px;
+            }
+            
+            .metronome-zone {
+                height: 120px;
+            }
+            
+            .metronome-pendulum {
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="fullscreen-toggle" id="fullscreenToggle">⛶ Full</button>
+    
+    <div class="theme-selector">
+        <button class="theme-button" data-theme="default">GB</button>
+        <button class="theme-button" data-theme="dark">Dark</button>
+        <button class="theme-button" data-theme="blue">Blue</button>
+        <button class="theme-button" data-theme="retro">Retro</button>
+    </div>
+
+    <div class="gameboy-screen" id="gameboyScreen">
+        <div class="screen-inner">
+            <div class="title">METRONOME PRO</div>
+
+            <div class="bpm-display">
+                <div class="bpm-number" id="bpmDisplay">120</div>
+                <div class="bpm-label">BPM</div>
+                <div class="subdivision-display" id="subdivisionDisplay">Quarter Notes</div>
+            </div>
+            
+            <div class="metronome-zone">
+                <div class="beat-indicator" id="beatIndicator">
+                    <!-- Dots will be generated dynamically -->
+                </div>
+                <div class="subdivision-dots" id="subdivisionDots">
+                    <!-- Sub-dots will be generated dynamically -->
+                </div>
+                <div class="metronome-pendulum" id="pendulum"></div>
+            </div>
+            
+            <div class="controls-section">
+                <div class="bpm-controls">
+                    <button class="bpm-button" id="bpmDown">-</button>
+                    <input type="number" class="bpm-input" id="bpmInput" min="60" max="220" value="120">
+                    <button class="bpm-button" id="bpmUp">+</button>
+                </div>
+                
+                <div class="time-signature">
+                    <label class="time-signature-label">TIME:</label>
+                    <select class="time-signature-select" id="timeSignature">
+                        <option value="2/4">2/4</option>
+                        <option value="3/4">3/4</option>
+                        <option value="4/4" selected>4/4</option>
+                        <option value="5/4">5/4</option>
+                        <option value="6/8">6/8</option>
+                        <option value="7/8">7/8</option>
+                        <option value="9/8">9/8</option>
+                        <option value="12/8">12/8</option>
+                    </select>
+                </div>
+
+                <div class="subdivision-controls">
+                    <label class="subdivision-label">SUB:</label>
+                    <select class="subdivision-select" id="subdivision">
+                        <option value="1">Quarter</option>
+                        <option value="2">8th Notes</option>
+                        <option value="4">16th Notes</option>
+                        <option value="3">Triplets</option>
+                    </select>
+                </div>
+
+                <div class="sound-controls">
+                    <label class="sound-label">SOUND:</label>
+                    <select class="sound-select" id="soundType">
+                        <option value="beep">Beep</option>
+                        <option value="click">Click</option>
+                        <option value="wood">Wood</option>
+                        <option value="bell">Bell</option>
+                        <option value="sine">Sine</option>
+                    </select>
+                </div>
+
+                <div class="accent-controls">
+                    <label class="accent-label">ACCENT:</label>
+                    <div class="accent-buttons" id="accentButtons">
+                        <!-- Accent buttons will be generated dynamically -->
+                    </div>
+                </div>
+                
+                <div class="tempo-presets">
+                    <button class="preset-button" data-bpm="60">LARGO (60)</button>
+                    <button class="preset-button" data-bpm="72">ADAGIO (72)</button>
+                    <button class="preset-button" data-bpm="96">ANDANTE (96)</button>
+                    <button class="preset-button" data-bpm="120">MODERATO (120)</button>
+                    <button class="preset-button" data-bpm="144">ALLEGRO (144)</button>
+                    <button class="preset-button" data-bpm="168">VIVACE (168)</button>
+                </div>
+            </div>
+            
+            <div class="main-controls">
+                <button class="retro-button" id="startButton">START</button>
+                <button class="retro-button" id="stopButton">STOP</button>
+                <button class="retro-button tap-button" id="tapButton">TAP</button>
+            </div>
+
+            <div class="practice-controls">
+                <button class="practice-button" id="practiceMode">Practice</button>
+                <button class="practice-button" id="tempoTrainer">Trainer</button>
+            </div>
+            
+            <div class="status-display" id="statusDisplay">
+                Press START to begin metronome
+            </div>
+
+            <div class="keyboard-shortcuts">
+                SPACE: Start/Stop | T: Tap | ↑↓: BPM | F: Fullscreen
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class EnhancedGameBoyMetronome {
+            constructor() {
+                this.isPlaying = false;
+                this.currentBPM = 120;
+                this.beatInterval = null;
+                this.subdivisionInterval = null;
+                this.currentBeat = 1;
+                this.currentSubBeat = 1;
+                this.timeSignature = '4/4';
+                this.beatsPerMeasure = 4;
+                this.subdivision = 1;
+                this.soundType = 'beep';
+                this.accentPattern = [true, false, false, false];
+                this.tapTimes = [];
+                this.practiceMode = false;
+                this.tempoTrainerMode = false;
+                this.tempoTrainerSettings = {
+                    startBPM: 80,
+                    targetBPM: 140,
+                    increment: 5,
+                    measuresPerTempo: 8,
+                    currentMeasures: 0
+                };
+                
+                this.audioContext = null;
+                this.settings = this.loadSettings();
+                this.initAudio();
+                this.initElements();
+                this.initEvents();
+                this.initServiceWorker();
+                this.updateDisplay();
+                this.setupBeatIndicator();
+                this.setupAccentButtons();
+                this.applyTheme(this.settings.theme || 'default');
+            }
+            
+            initAudio() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('Audio not supported');
+                }
+            }
+
+            initServiceWorker() {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgZXZlbnQgPT4gewogIGV2ZW50LndhaXRVbnRpbChzZWxmLnNraXBXYWl0aW5nKCkpOwp9KTsKCnNlbGYuYWRkRXZlbnRMaXN0ZW5lcignZmV0Y2gnLCBldmVudCA9PiB7CiAgZXZlbnQucmVzcG9uZFdpdGgoZmV0Y2goZXZlbnQucmVxdWVzdCkpOwp9KTs=')
+                    .catch(() => {});
+                }
+            }
+
+            loadSettings() {
+                try {
+                    const saved = JSON.parse(window.localStorage?.getItem('metronomeSettings') || '{}');
+                    return saved;
+                } catch (e) {
+                    return {};
+                }
+            }
+
+            saveSettings() {
+                try {
+                    const settings = {
+                        bpm: this.currentBPM,
+                        timeSignature: this.timeSignature,
+                        subdivision: this.subdivision,
+                        soundType: this.soundType,
+                        accentPattern: this.accentPattern,
+                        theme: document.body.className
+                    };
+                    window.localStorage?.setItem('metronomeSettings', JSON.stringify(settings));
+                } catch (e) {
+                    // LocalStorage not available
+                }
+            }
+            
+            initElements() {
+                this.bpmDisplay = document.getElementById('bpmDisplay');
+                this.bpmInput = document.getElementById('bpmInput');
+                this.bpmDown = document.getElementById('bpmDown');
+                this.bpmUp = document.getElementById('bpmUp');
+                this.timeSignatureSelect = document.getElementById('timeSignature');
+                this.subdivisionSelect = document.getElementById('subdivision');
+                this.subdivisionDisplay = document.getElementById('subdivisionDisplay');
+                this.soundTypeSelect = document.getElementById('soundType');
+                this.startButton = document.getElementById('startButton');
+                this.stopButton = document.getElementById('stopButton');
+                this.tapButton = document.getElementById('tapButton');
+                this.statusDisplay = document.getElementById('statusDisplay');
+                this.pendulum = document.getElementById('pendulum');
+                this.beatIndicator = document.getElementById('beatIndicator');
+                this.subdivisionDots = document.getElementById('subdivisionDots');
+                this.accentButtons = document.getElementById('accentButtons');
+                this.presetButtons = document.querySelectorAll('.preset-button');
+                this.themeButtons = document.querySelectorAll('.theme-button');
+                this.fullscreenToggle = document.getElementById('fullscreenToggle');
+                this.gameboyScreen = document.getElementById('gameboyScreen');
+                this.practiceModeButton = document.getElementById('practiceMode');
+                this.tempoTrainerButton = document.getElementById('tempoTrainer');
+
+                // Apply saved settings
+                if (this.settings.bpm) this.setBPM(this.settings.bpm);
+                if (this.settings.timeSignature) {
+                    this.timeSignatureSelect.value = this.settings.timeSignature;
+                    this.timeSignature = this.settings.timeSignature;
+                    this.beatsPerMeasure = parseInt(this.timeSignature.split('/')[0]);
+                }
+                if (this.settings.subdivision) {
+                    this.subdivisionSelect.value = this.settings.subdivision;
+                    this.subdivision = parseInt(this.settings.subdivision);
+                }
+                if (this.settings.soundType) {
+                    this.soundTypeSelect.value = this.settings.soundType;
+                    this.soundType = this.settings.soundType;
+                }
+                if (this.settings.accentPattern) {
+                    this.accentPattern = this.settings.accentPattern;
+                }
+            }
+            
+            initEvents() {
+                // メイン操作
+                this.startButton.addEventListener('click', () => this.start());
+                this.stopButton.addEventListener('click', () => this.stop());
+                this.tapButton.addEventListener('click', () => this.handleTap());
+                
+                // BPM調整
+                this.bpmInput.addEventListener('change', (e) => this.setBPM(parseInt(e.target.value)));
+                this.bpmInput.addEventListener('input', (e) => this.setBPM(parseInt(e.target.value)));
+                this.bpmDown.addEventListener('click', () => this.changeBPM(-1));
+                this.bpmUp.addEventListener('click', () => this.changeBPM(1));
+                
+                // 連続調整（長押し）
+                this.setupLongPress(this.bpmDown, () => this.changeBPM(-1));
+                this.setupLongPress(this.bpmUp, () => this.changeBPM(1));
+                
+                // 拍子変更
+                this.timeSignatureSelect.addEventListener('change', (e) => {
+                    this.timeSignature = e.target.value;
+                    this.beatsPerMeasure = parseInt(this.timeSignature.split('/')[0]);
+                    this.setupBeatIndicator();
+                    this.setupAccentButtons();
+                    this.currentBeat = 1;
+                    this.saveSettings();
+                });
+
+                // サブディビジョン変更
+                this.subdivisionSelect.addEventListener('change', (e) => {
+                    this.subdivision = parseInt(e.target.value);
+                    this.updateSubdivisionDisplay();
+                    this.setupSubdivisionDots();
+                    this.currentSubBeat = 1;
+                    this.saveSettings();
+                    
+                    if (this.isPlaying) {
+                        this.stop();
+                        setTimeout(() => this.start(), 100);
+                    }
+                });
+
+                // サウンドタイプ変更
+                this.soundTypeSelect.addEventListener('change', (e) => {
+                    this.soundType = e.target.value;
+                    this.saveSettings();
+                });
+                
+                // テンポプリセット
+                this.presetButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const bpm = parseInt(button.dataset.bpm);
+                        this.setBPM(bpm);
+                    });
+                });
+
+                // テーマ変更
+                this.themeButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        this.applyTheme(button.dataset.theme);
+                    });
+                });
+
+                // フルスクリーン
+                this.fullscreenToggle.addEventListener('click', () => this.toggleFullscreen());
+
+                // 練習モード
+                this.practiceModeButton.addEventListener('click', () => this.togglePracticeMode());
+                this.tempoTrainerButton.addEventListener('click', () => this.toggleTempoTrainer());
+
+                // キーボードショートカット
+                document.addEventListener('keydown', (e) => this.handleKeydown(e));
+
+                // ページを閉じる前に設定を保存
+                window.addEventListener('beforeunload', () => this.saveSettings());
+            }
+
+            handleKeydown(e) {
+                // 入力フィールドにフォーカスがある場合はスキップ
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
+                switch(e.code) {
+                    case 'Space':
+                        e.preventDefault();
+                        this.isPlaying ? this.stop() : this.start();
+                        break;
+                    case 'KeyT':
+                        e.preventDefault();
+                        this.handleTap();
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        this.changeBPM(e.shiftKey ? 10 : 1);
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        this.changeBPM(e.shiftKey ? -10 : -1);
+                        break;
+                    case 'KeyF':
+                        e.preventDefault();
+                        this.toggleFullscreen();
+                        break;
+                    case 'Escape':
+                        if (document.fullscreenElement) {
+                            document.exitFullscreen();
+                        }
+                        break;
+                }
+            }
+
+            applyTheme(theme) {
+                document.body.className = theme !== 'default' ? `theme-${theme}` : '';
+                this.saveSettings();
+            }
+
+            toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    if (this.gameboyScreen.requestFullscreen) {
+                        this.gameboyScreen.requestFullscreen();
+                        this.gameboyScreen.classList.add('fullscreen');
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                        this.gameboyScreen.classList.remove('fullscreen');
+                    }
+                }
+            }
+
+            togglePracticeMode() {
+                this.practiceMode = !this.practiceMode;
+                this.practiceModeButton.classList.toggle('active', this.practiceMode);
+                
+                if (this.practiceMode && this.tempoTrainerMode) {
+                    this.toggleTempoTrainer();
+                }
+                
+                this.statusDisplay.textContent = this.practiceMode ? 
+                    'Practice Mode: Click START to begin' : 
+                    'Press START to begin metronome';
+            }
+
+            toggleTempoTrainer() {
+                this.tempoTrainerMode = !this.tempoTrainerMode;
+                this.tempoTrainerButton.classList.toggle('active', this.tempoTrainerMode);
+                
+                if (this.tempoTrainerMode) {
+                    if (this.practiceMode) this.togglePracticeMode();
+                    this.tempoTrainerSettings.currentMeasures = 0;
+                    this.setBPM(this.tempoTrainerSettings.startBPM);
+                    this.statusDisplay.textContent = 
+                        `Tempo Trainer: ${this.tempoTrainerSettings.startBPM} → ${this.tempoTrainerSettings.targetBPM} BPM`;
+                } else {
+                    this.statusDisplay.textContent = 'Press START to begin metronome';
+                }
+            }
+            
+            setupLongPress(element, callback) {
+                let timeout;
+                let interval;
+                
+                const startPress = () => {
+                    timeout = setTimeout(() => {
+                        interval = setInterval(callback, 100);
+                    }, 500);
+                };
+                
+                const endPress = () => {
+                    clearTimeout(timeout);
+                    clearInterval(interval);
+                };
+                
+                element.addEventListener('mousedown', startPress);
+                element.addEventListener('mouseup', endPress);
+                element.addEventListener('mouseleave', endPress);
+                element.addEventListener('touchstart', startPress);
+                element.addEventListener('touchend', endPress);
+            }
+            
+            setBPM(bpm) {
+                if (isNaN(bpm) || bpm < 60) bpm = 60;
+                if (bpm > 220) bpm = 220;
+                this.currentBPM = bpm;
+                this.updateDisplay();
+                
+                if (this.isPlaying) {
+                    this.stop();
+                    setTimeout(() => this.start(), 100);
+                }
+            }
+            
+            changeBPM(delta) {
+                this.setBPM(this.currentBPM + delta);
+            }
+            
+            setupBeatIndicator() {
+                this.beatIndicator.innerHTML = '';
+                for (let i = 0; i < this.beatsPerMeasure; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'beat-dot';
+                    if (this.accentPattern[i]) {
+                        dot.classList.add('accent');
+                    }
+                    this.beatIndicator.appendChild(dot);
+                }
+                this.beatDots = this.beatIndicator.querySelectorAll('.beat-dot');
+            }
+
+            setupSubdivisionDots() {
+                this.subdivisionDots.innerHTML = '';
+                for (let i = 0; i < this.subdivision; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'sub-dot';
+                    this.subdivisionDots.appendChild(dot);
+                }
+                this.subDots = this.subdivisionDots.querySelectorAll('.sub-dot');
+            }
+
+            setupAccentButtons() {
+                this.accentButtons.innerHTML = '';
+                this.accentPattern = this.accentPattern.slice(0, this.beatsPerMeasure);
+                while (this.accentPattern.length < this.beatsPerMeasure) {
+                    this.accentPattern.push(false);
+                }
+                
+                for (let i = 0; i < this.beatsPerMeasure; i++) {
+                    const button = document.createElement('button');
+                    button.className = 'accent-button';
+                    button.textContent = i + 1;
+                    button.addEventListener('click', () => this.toggleAccent(i));
+                    if (this.accentPattern[i]) {
+                        button.classList.add('active');
+                    }
+                    this.accentButtons.appendChild(button);
+                }
+                this.setupBeatIndicator();
+            }
+
+            toggleAccent(beatIndex) {
+                this.accentPattern[beatIndex] = !this.accentPattern[beatIndex];
+                this.setupAccentButtons();
+                this.saveSettings();
+            }
+
+            updateSubdivisionDisplay() {
+                const subdivisionNames = {
+                    1: 'Quarter Notes',
+                    2: '8th Notes',
+                    3: 'Triplets',
+                    4: '16th Notes'
+                };
+                this.subdivisionDisplay.textContent = subdivisionNames[this.subdivision] || 'Custom';
+            }
+            
+            updateDisplay() {
+                this.bpmDisplay.textContent = this.currentBPM;
+                this.bpmInput.value = this.currentBPM;
+                this.updateSubdivisionDisplay();
+            }
+            
+            start() {
+                if (this.isPlaying) return;
+                
+                if (this.audioContext && this.audioContext.state === 'suspended') {
+                    this.audioContext.resume();
+                }
+                
+                this.isPlaying = true;
+                this.currentBeat = 1;
+                this.currentSubBeat = 1;
+                this.startButton.classList.add('active');
+                
+                const beatDuration = 60000 / this.currentBPM;
+                const subdivisionDuration = beatDuration / this.subdivision;
+                
+                // 振り子のアニメーション設定
+                this.pendulum.style.animationDuration = (beatDuration * 2) + 'ms';
+                this.pendulum.classList.add('pendulum-active');
+                
+                // 最初のビートを即座に再生
+                this.playBeat();
+                this.updateBeatIndicator();
+                this.updateSubdivisionIndicator();
+                
+                // 拍のインターバル
+                this.beatInterval = setInterval(() => {
+                    this.currentBeat++;
+                    if (this.currentBeat > this.beatsPerMeasure) {
+                        this.currentBeat = 1;
+                        this.handleMeasureComplete();
+                    }
+                    this.playBeat();
+                    this.updateBeatIndicator();
+                    this.currentSubBeat = 1;
+                    this.updateSubdivisionIndicator();
+                }, beatDuration);
+
+                // サブディビジョンのインターバル（subdivision > 1の場合）
+                if (this.subdivision > 1) {
+                    this.subdivisionInterval = setInterval(() => {
+                        this.currentSubBeat++;
+                        if (this.currentSubBeat > this.subdivision) {
+                            this.currentSubBeat = 1;
+                        } else {
+                            this.playSubBeat();
+                            this.updateSubdivisionIndicator();
+                        }
+                    }, subdivisionDuration);
+                }
+                
+                this.updateStatusDisplay();
+            }
+
+            handleMeasureComplete() {
+                if (this.tempoTrainerMode) {
+                    this.tempoTrainerSettings.currentMeasures++;
+                    if (this.tempoTrainerSettings.currentMeasures >= this.tempoTrainerSettings.measuresPerTempo) {
+                        const newBPM = Math.min(
+                            this.currentBPM + this.tempoTrainerSettings.increment,
+                            this.tempoTrainerSettings.targetBPM
+                        );
+                        
+                        if (newBPM < this.tempoTrainerSettings.targetBPM) {
+                            this.setBPM(newBPM);
+                            this.tempoTrainerSettings.currentMeasures = 0;
+                            this.statusDisplay.textContent = 
+                                `Tempo Trainer: ${newBPM} BPM (Target: ${this.tempoTrainerSettings.targetBPM})`;
+                        } else {
+                            this.statusDisplay.textContent = 'Tempo Trainer: Target BPM reached!';
+                        }
+                    }
+                }
+            }
+
+            updateStatusDisplay() {
+                if (this.tempoTrainerMode) {
+                    const remaining = this.tempoTrainerSettings.measuresPerTempo - this.tempoTrainerSettings.currentMeasures;
+                    this.statusDisplay.textContent = 
+                        `Tempo Trainer: ${this.currentBPM} BPM (${remaining} measures to next tempo)`;
+                } else {
+                    this.statusDisplay.textContent = `Playing ${this.timeSignature} at ${this.currentBPM} BPM`;
+                }
+            }
+            
+            stop() {
+                this.isPlaying = false;
+                this.startButton.classList.remove('active');
+                
+                if (this.beatInterval) {
+                    clearInterval(this.beatInterval);
+                    this.beatInterval = null;
+                }
+
+                if (this.subdivisionInterval) {
+                    clearInterval(this.subdivisionInterval);
+                    this.subdivisionInterval = null;
+                }
+                
+                this.pendulum.classList.remove('pendulum-active');
+                
+                // インジケーターをリセット
+                if (this.beatDots) {
+                    this.beatDots.forEach(dot => dot.classList.remove('active'));
+                }
+                if (this.subDots) {
+                    this.subDots.forEach(dot => dot.classList.remove('active'));
+                }
+                this.currentBeat = 1;
+                this.currentSubBeat = 1;
+                
+                if (this.tempoTrainerMode) {
+                    this.statusDisplay.textContent = 
+                        `Tempo Trainer Stopped - ${this.timeSignature} at ${this.currentBPM} BPM`;
+                } else {
+                    this.statusDisplay.textContent = `Stopped - ${this.timeSignature} at ${this.currentBPM} BPM`;
+                }
+            }
+            
+            updateBeatIndicator() {
+                if (!this.beatDots) return;
+                
+                this.beatDots.forEach((dot, index) => {
+                    if (index + 1 === this.currentBeat) {
+                        dot.classList.add('active');
+                        dot.classList.add('flash');
+                        setTimeout(() => dot.classList.remove('flash'), 200);
+                    } else {
+                        dot.classList.remove('active');
+                    }
+                });
+            }
+
+            updateSubdivisionIndicator() {
+                if (!this.subDots) return;
+                
+                this.subDots.forEach((dot, index) => {
+                    if (index + 1 === this.currentSubBeat) {
+                        dot.classList.add('active');
+                    } else {
+                        dot.classList.remove('active');
+                    }
+                });
+            }
+            
+            playBeat() {
+                if (!this.audioContext) return;
+                
+                const isAccentedBeat = this.accentPattern[this.currentBeat - 1];
+                this.createSound(isAccentedBeat, true);
+            }
+
+            playSubBeat() {
+                if (!this.audioContext) return;
+                this.createSound(false, false);
+            }
+
+            createSound(isAccented, isBeat) {
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                let frequency, volume, duration, waveType;
+                
+                switch (this.soundType) {
+                    case 'click':
+                        frequency = isAccented ? 2000 : 1500;
+                        volume = isAccented ? 0.15 : (isBeat ? 0.1 : 0.06);
+                        duration = 0.05;
+                        waveType = 'square';
+                        break;
+                    case 'wood':
+                        frequency = isAccented ? 800 : 600;
+                        volume = isAccented ? 0.2 : (isBeat ? 0.15 : 0.08);
+                        duration = 0.1;
+                        waveType = 'triangle';
+                        break;
+                    case 'bell':
+                        frequency = isAccented ? 1500 : 1200;
+                        volume = isAccented ? 0.12 : (isBeat ? 0.08 : 0.05);
+                        duration = 0.3;
+                        waveType = 'sine';
+                        break;
+                    case 'sine':
+                        frequency = isAccented ? 880 : 440;
+                        volume = isAccented ? 0.1 : (isBeat ? 0.08 : 0.05);
+                        duration = 0.2;
+                        waveType = 'sine';
+                        break;
+                    default: // beep
+                        frequency = isAccented ? 1200 : 800;
+                        volume = isAccented ? 0.12 : (isBeat ? 0.08 : 0.05);
+                        duration = 0.1;
+                        waveType = 'square';
+                        break;
+                }
+                
+                oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+                oscillator.type = waveType;
+                
+                gainNode.gain.setValueAtTime(volume, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+                
+                oscillator.start(this.audioContext.currentTime);
+                oscillator.stop(this.audioContext.currentTime + duration);
+            }
+            
+            handleTap() {
+                const now = Date.now();
+                this.tapTimes.push(now);
+                
+                if (this.tapTimes.length > 4) {
+                    this.tapTimes.shift();
+                }
+                
+                if (this.tapTimes.length >= 2) {
+                    const intervals = [];
+                    for (let i = 1; i < this.tapTimes.length; i++) {
+                        intervals.push(this.tapTimes[i] - this.tapTimes[i - 1]);
+                    }
+                    
+                    const averageInterval = intervals.reduce((a, b) => a + b) / intervals.length;
+                    const calculatedBPM = Math.round(60000 / averageInterval);
+                    
+                    if (calculatedBPM >= 60 && calculatedBPM <= 220) {
+                        this.setBPM(calculatedBPM);
+                        this.statusDisplay.textContent = `Tap tempo: ${calculatedBPM} BPM`;
+                        
+                        setTimeout(() => {
+                            if (!this.isPlaying) {
+                                this.statusDisplay.textContent = 'Press START to begin metronome';
+                            }
+                        }, 2000);
+                    }
+                }
+                
+                // タップボタンのビジュアルフィードバック
+                this.tapButton.style.transform = 'translate(3px, 3px)';
+                this.tapButton.style.boxShadow = 'none';
+                setTimeout(() => {
+                    this.tapButton.style.transform = '';
+                    this.tapButton.style.boxShadow = '3px 3px 0px var(--gb-dark-green)';
+                }, 150);
+                
+                this.playTapSound();
+            }
+            
+            playTapSound() {
+                if (!this.audioContext) return;
+                
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(1000, this.audioContext.currentTime);
+                oscillator.type = 'triangle';
+                
+                gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15);
+                
+                oscillator.start(this.audioContext.currentTime);
+                oscillator.stop(this.audioContext.currentTime + 0.15);
+            }
+        }
+        
+        // アプリ初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            new EnhancedGameBoyMetronome();
+        });
+    </script>
+</body>
+</html>
